@@ -178,5 +178,4 @@ export const fetchHoldingLocations = async (holdings: string[]): Promise<PlaceRe
     }
 }
 
-export { fetchHoldingLocations }; 
 export type { PlaceResult };
