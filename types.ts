@@ -109,6 +109,35 @@ export interface AIAnalysisResult {
     composition: CompositionAnalysis; // New deep dive data
 }
 
+export interface PortfolioAllocation {
+  ticker: string;
+  name: string;
+  percentage: number;
+  reason: string;
+}
+
+export interface PortfolioProposal {
+  title: string;
+  description: string;
+  riskLevel: 'Low' | 'Medium' | 'High' | 'Extreme';
+  expectedAnnualReturn: string;
+  allocations: PortfolioAllocation[];
+}
+
+export interface MarketEvent {
+  headline: string;
+  sentiment: 'Positive' | 'Negative' | 'Neutral';
+  impact: string; 
+  uri?: string;
+}
+
+export interface MarketPulseData {
+  summary: string;
+  geopoliticalRisk: 'Low' | 'Medium' | 'High' | 'Extreme';
+  trendingSectors: string[];
+  events: MarketEvent[];
+}
+
 export interface PlaceResult {
   name: string;
   uri: string;

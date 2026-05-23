@@ -8,6 +8,10 @@ import PerformanceTable from './components/PerformanceTable';
 import FundamentalComparison from './components/FundamentalComparison'; 
 import AIAnalysisDashboard from './components/AIAnalysisDashboard'; 
 import ChatAssistant from './components/ChatAssistant'; 
+import Roboadvisor from './components/Roboadvisor';
+import LivePulse from './components/LivePulse';
+
+type MainView = 'Comparator' | 'Roboadvisor' | 'LivePulse';
 
 // --- Components for App Structure ---
 
@@ -84,6 +88,7 @@ const MarketIndicator: React.FC<{ name: string; timezone: string; openHour: numb
 
 const App: React.FC = () => {
   // Global State
+  const [activeView, setActiveView] = useState<MainView>('Comparator');
   const [currency, setCurrency] = useState<string>('PLN'); // Default to PLN based on feedback
   const [taxDomicile, setTaxDomicile] = useState<string>('Poland');
   const [investmentHorizon, setInvestmentHorizon] = useState<InvestmentHorizon>('20 Years');
@@ -199,6 +204,24 @@ const App: React.FC = () => {
           </div>
           
           <div className="px-6 py-4 space-y-4">
+              <nav className="space-y-2 mb-8">
+                  {(['Comparator', 'Roboadvisor', 'LivePulse'] as MainView[]).map(view => (
+                      <button
+                          key={view}
+                          onClick={() => setActiveView(view)}
+                          className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                              activeView === view 
+                                ? 'bg-indigo-600 text-white shadow-md' 
+                                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                          }`}
+                      >
+                          {view === 'Comparator' && '📊 ETF Comparator'}
+                          {view === 'Roboadvisor' && '🤖 Roboadvisor'}
+                          {view === 'LivePulse' && '🌐 Live Market Pulse'}
+                      </button>
+                  ))}
+              </nav>
+
               {/* Domicile Selector */}
               <div>
                 <label className="text-[10px] font-semibold text-slate-500 uppercase block mb-2">My Domicile</label>
@@ -239,7 +262,12 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-4 md:p-8 relative">
         
-        {/* Comparator Header - The "Split View" */}
+        {activeView === 'Roboadvisor' && <Roboadvisor allEtfs={allEtfs} />}
+        {activeView === 'LivePulse' && <LivePulse />}
+        
+        {activeView === 'Comparator' && (
+          <>
+            {/* Comparator Header - The "Split View" */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             {/* Slot A */}
             {etfLeft ? (
@@ -388,6 +416,8 @@ const App: React.FC = () => {
                  </div>
              )}
         </div>
+        </>
+        )}
 
       </main>
     </div>

@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Chat } from '@google/genai';
-import { ETF, AIAnalysisResult, InvestmentHorizon, PlaceResult } from '../types';
+import { ETF, AIAnalysisResult, InvestmentHorizon, PlaceResult, PortfolioProposal, MarketPulseData } from '../types';
 
 /**
  * AI Analyser Module
@@ -13,6 +13,106 @@ const getClient = () => {
     }
     return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 }
+
+export const fetchMarketPulse = async (category: string = "Global Markets"): Promise<MarketPulseData | null> => {
+  const client = getClient();
+  const prompt = `
+    You are an elite live market summary engine.
+    Search for the latest real-time news regarding "${category}" or broad macroeconomic and geopolitical events affecting index funds and ETFs.
+    
+    Output a STRICT JSON object:
+    {
+      "summary": "A 2-3 sentence executive summary of the current market mood.",
+      "geopoliticalRisk": "Low" | "Medium" | "High" | "Extreme",
+      "trendingSectors": ["Sector 1", "Sector 2"],
+      "events": [
+         {
+            "headline": "A short, live news headline",
+            "sentiment": "Positive" | "Negative" | "Neutral",
+            "impact": "How does this affect ETFs?",
+            "uri": "Optional link to the news if you have it"
+         }
+      ]
+    }
+    Keep it strictly 3-4 top events.
+  `;
+
+  try {
+    const response = await client.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        tools: [{ googleSearch: {} }],
+      }
+    });
+
+    const text = response.text;
+    if (!text) return null;
+    return JSON.parse(text) as MarketPulseData;
+  } catch (error) {
+    console.error("Gemini Market Pulse Error:", error);
+    return null;
+  }
+};
+
+export const buildPortfolioFromPrompt = async (userPrompt: string, availableEtfs: ETF[]): Promise<PortfolioProposal | null> => {
+    const client = getClient();
+    
+    // Create a lean representation of available ETFs to save tokens
+    const etfDataStr = JSON.stringify(availableEtfs.map(e => ({
+        ticker: e.ticker,
+        name: e.name,
+        category: e.category,
+        ter: e.ter,
+        distribution: e.distribution
+    })));
+
+    const prompt = `
+        You are an elite AI Robo-advisor.
+        The user has provided this natural language request: "${userPrompt}"
+        
+        Using ONLY the following available ETFs, construct the mathematically optimal portfolio matching their request:
+        ${etfDataStr}
+
+        RULES:
+        1. Allocations must sum to 100.
+        2. Pick 2 to 5 ETFs maximum. Do not overcomplicate.
+        3. Match the user's risk tolerance, time horizon, and thematic preferences (e.g. accumulating vs distributing, tech vs safe).
+        
+        Output STRICT JSON:
+        {
+           "title": "A catchy title for this portfolio (e.g., 'Aggressive Tech Compounder')",
+           "description": "2-3 sentences explaining why this matches their exact prompt.",
+           "riskLevel": "Low" | "Medium" | "High" | "Extreme",
+           "expectedAnnualReturn": "e.g., 7-9%",
+           "allocations": [
+              {
+                 "ticker": "TICKER_SYMBOL",
+                 "name": "ETF Name",
+                 "percentage": 50,
+                 "reason": "1 short sentence explaining why this ETF was included."
+              }
+           ]
+        }
+    `;
+
+    try {
+        const response = await client.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json'
+            }
+        });
+        const text = response.text;
+        if(!text) return null;
+        return JSON.parse(text) as PortfolioProposal;
+    } catch(err) {
+        console.error("Gemini Portfolio Builder Error:", err);
+        return null;
+    }
+};
 
 export const createChatSession = (etf1: ETF | null, etf2: ETF | null): Chat => {
     const client = getClient();
