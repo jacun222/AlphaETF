@@ -128,7 +128,11 @@ const LivePulse: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            ) : null}
+            ) : (
+                <div className="h-64 flex flex-col items-center justify-center bg-white rounded-2xl shadow-sm border border-slate-200">
+                    <p className="text-red-500 font-medium">Brak danych. Wystąpił błąd podczas analizy rynku.</p>
+                </div>
+            )}
         </div>
     );
 };

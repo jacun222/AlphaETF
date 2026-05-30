@@ -49,7 +49,15 @@ export const fetchMarketPulse = async (category: string = "Global Markets"): Pro
 
     const text = response.text;
     if (!text) return null;
-    return JSON.parse(text) as MarketPulseData;
+    
+    let data: any = null;
+    try {
+        data = JSON.parse(text);
+    } catch (e) {
+        const match = text.match(/\{[\s\S]*\}/);
+        if (match) data = JSON.parse(match[0]);
+    }
+    return data as MarketPulseData;
   } catch (error) {
     console.error("Gemini Market Pulse Error:", error);
     return null;
@@ -107,7 +115,14 @@ export const buildPortfolioFromPrompt = async (userPrompt: string, availableEtfs
         });
         const text = response.text;
         if(!text) return null;
-        return JSON.parse(text) as PortfolioProposal;
+        let data: any = null;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            const match = text.match(/\{[\s\S]*\}/);
+            if (match) data = JSON.parse(match[0]);
+        }
+        return data as PortfolioProposal;
     } catch(err) {
         console.error("Gemini Portfolio Builder Error:", err);
         return null;

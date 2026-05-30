@@ -13,13 +13,19 @@ const Roboadvisor: React.FC<Props> = ({ allEtfs }) => {
   const [prompt, setPrompt] = useState('');
   const [isBuilding, setIsBuilding] = useState(false);
   const [proposal, setProposal] = useState<PortfolioProposal | null>(null);
+  const [error, setError] = useState('');
 
   const handleBuild = async () => {
     if (!prompt.trim() || allEtfs.length === 0) return;
     setIsBuilding(true);
     setProposal(null);
+    setError('');
     const result = await buildPortfolioFromPrompt(prompt, allEtfs);
-    setProposal(result);
+    if (result) {
+        setProposal(result);
+    } else {
+        setError('Wystąpił błąd podczas analizy. Spróbuj ponownie lub zmień treść zapytania.');
+    }
     setIsBuilding(false);
   };
 
@@ -45,9 +51,10 @@ const Roboadvisor: React.FC<Props> = ({ allEtfs }) => {
               disabled={isBuilding || !prompt.trim()}
               className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-bold px-8 py-4 transition-colors font-sans whitespace-nowrap"
            >
-              {isBuilding ? 'Building...' : 'Build Portfolio'}
+              {isBuilding ? 'Analizowanie...' : 'Zbuduj Portfel'}
            </button>
         </div>
+        {error && <p className="mt-4 text-red-500 font-medium text-sm">{error}</p>}
       </div>
 
       {proposal && (
